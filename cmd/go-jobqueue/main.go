@@ -162,12 +162,12 @@ func main() {
 							continue
 						}
 
-						log.Info("Processing job:", job.UUID)
+						log.Info("Processing job:", job.ID)
 						time.Sleep(500 * time.Millisecond)
 						if err := r.FinishJob(job); err != nil {
 							log.Error("Failed job:", err)
 						} else {
-							log.Info("Processed job:", job.UUID)
+							log.Info("Processed job:", job.ID)
 						}
 
 					}

@@ -12,6 +12,8 @@ const statusRunning = "running"
 const statusError = "error"
 const statusFinished = "finished"
 
+const defaultTableName = "jobqueue"
+
 type Repository interface {
 	Setup() error
 	Queue(job *Job) (*Job, error)

@@ -3,17 +3,15 @@ package jobqueue
 import (
 	"encoding/json"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Job struct {
 	ID         int64
-	UUID       string
 	JobType    string
 	State      string
 	Payload    string
 	CreatedOn  int64 `db:"created_on"`
+	StartedOn  int64 `db:"started_on"`
 	FinishedOn int64 `db:"finished_on"`
 }
 
@@ -25,10 +23,10 @@ func NewJob(jobType string, payload JobParams) (*Job, error) {
 	}
 
 	return &Job{
-		UUID:       uuid.New().String(),
 		JobType:    jobType,
 		Payload:    string(payloadBytes),
 		CreatedOn:  time.Now().Unix(),
+		StartedOn:  0,
 		FinishedOn: 0,
 	}, nil
 

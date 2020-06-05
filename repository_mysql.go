@@ -9,12 +9,14 @@ import (
 )
 
 type MySQLRepository struct {
-	db *sqlx.DB
+	db        *sqlx.DB
+	tableName string
 }
 
 func NewMySQLRepository(db *sqlx.DB) Repository {
 	return &MySQLRepository{
-		db: db,
+		db:        db,
+		tableName: defaultTableName,
 	}
 }
 
@@ -23,25 +25,24 @@ func (r *MySQLRepository) Setup() error {
 	log.Info("Performing setup")
 
 	statements := []string{
-		`CREATE TABLE IF NOT EXISTS "jobqueue" (
+		`CREATE TABLE IF NOT EXISTS "` + r.tableName + `" (
 			"id" bigint unsigned NOT NULL AUTO_INCREMENT,
-			"uuid" varchar(36) NOT NULL DEFAULT '',
 			"jobtype" varchar(255) NOT NULL DEFAULT '',
 			"state" varchar(255) NOT NULL DEFAULT '',
 			"payload" json DEFAULT NULL,
 			"created_on" int NOT NULL DEFAULT '0',
+			"started_on" int NOT NULL DEFAULT '0',
+			"finished_on" int NOT NULL DEFAULT '0',
 			PRIMARY KEY ("id"),
 			UNIQUE KEY "id" ("id"),
-			UNIQUE KEY "jobqueue_uuid" ("uuid"),
 			KEY "jobqueue_state" ("state"),
 			KEY "jobqueue_created_on" ("created_on")
 		)`,
-		`ALTER TABLE "jobqueue" ADD COLUMN "finished_on" int NOT NULL DEFAULT '0'`,
 	}
 
 	for _, stmt := range statements {
 		if _, err := r.db.Exec(stmt); err != nil {
-			return err
+			log.Error(err)
 		}
 	}
 
@@ -56,18 +57,10 @@ func (r *MySQLRepository) Queue(job *Job) (*Job, error) {
 	job.State = statusQueued
 
 	result, err := r.db.NamedExec(
-		`INSERT INTO "jobqueue" (
-			"uuid",
-			"jobtype",
-			"state",
-			"payload",
-			"created_on"
+		`INSERT INTO "`+r.tableName+`" (
+			"jobtype", "state", "payload", "created_on"
 		) VALUES (
-			:uuid,
-			:jobtype,
-			:state,
-			:payload,
-			:created_on
+			:jobtype, :state, :payload, :created_on
 		)`,
 		job,
 	)
@@ -100,7 +93,7 @@ func (r *MySQLRepository) Dequeue(jobType string) (*Job, error) {
 	if err := trx.Get(
 		job,
 		`SELECT *
-		FROM "jobqueue"
+		FROM "`+r.tableName+`"
 		WHERE "state" = ? AND "jobtype" = ?
 		ORDER BY "created_on"
 		LIMIT 1
@@ -113,6 +106,7 @@ func (r *MySQLRepository) Dequeue(jobType string) (*Job, error) {
 		return nil, err
 	}
 
+	job.StartedOn = time.Now().Unix()
 	job.State = statusRunning
 
 	if err := r.setJobStatus(trx, job); err != nil {
