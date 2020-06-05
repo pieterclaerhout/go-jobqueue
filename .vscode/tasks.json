@@ -65,6 +65,42 @@
             ]
         },
         {
+            "label": "go-jobqueue | run | setup",
+            "command": "go-james run setup",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | run | queue",
+            "command": "go-james run queue",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | run | queue many",
+            "command": "go-james run queue-many",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | run | version",
+            "command": "go-james run version",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
             "label": "go-jobqueue | staticcheck",
             "command": "go-james staticcheck",
             "type": "shell",
@@ -76,33 +112,6 @@
         {
             "label": "go-jobqueue | docker-image",
             "command": "go-james docker-image",
-            "type": "shell",
-            "group": "build",
-            "problemMatcher": [
-                "$go"
-            ]
-        },
-        {
-            "label": "go-jobqueue | install",
-            "command": "go-james install",
-            "type": "shell",
-            "group": "build",
-            "problemMatcher": [
-                "$go"
-            ]
-        },
-        {
-            "label": "go-jobqueue | uninstall",
-            "command": "go-james uninstall",
-            "type": "shell",
-            "group": "build",
-            "problemMatcher": [
-                "$go"
-            ]
-        },
-        {
-            "label": "go-jobqueue | run (debug)",
-            "command": "DEBUG=1 go-james run",
             "type": "shell",
             "group": "build",
             "problemMatcher": [
