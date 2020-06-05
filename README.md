@@ -1,3 +1,5 @@
 # go-jobqueue
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/pieterclaerhout/go-jobqueue)](https://goreportcard.com/report/github.com/pieterclaerhout/go-jobqueue) [![Documentation](https://godoc.org/github.com/pieterclaerhout/go-jobqueue?status.svg)](http://godoc.org/github.com/pieterclaerhout/go-jobqueue) [![License](https://img.shields.io/badge/license-Apache%20v2-orange.svg)](https://github.com/pieterclaerhout/go-jobqueue/raw/master/LICENSE) [![GitHub Version](https://img.shields.io/github/v/release/pieterclaerhout/go-jobqueue)](https://github.com/pieterclaerhout/go-jobqueue/releases) [![GitHub issues](https://img.shields.io/github/issues/pieterclaerhout/go-jobqueue.svg)](https://github.com/pieterclaerhout/go-jobqueue/issues) [![GitHub last commit](https://img.shields.io/github/last-commit/pieterclaerhout/go-jobqueue.svg)](https://github.com/pieterclaerhout/go-jobqueue)
+
+Based on https://mysqlserverteam.com/mysql-8-0-1-using-skip-locked-and-nowait-to-handle-hot-rows/
