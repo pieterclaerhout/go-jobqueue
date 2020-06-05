@@ -15,7 +15,7 @@ var commandQueue = &cli.Command{
 			return err
 		}
 
-		j, err := jobqueue.NewJob("email", jobqueue.JobParams{
+		j, err := jobqueue.NewJob("email", jobqueue.JobPayload{
 			"from":    "pieter.claerhout@gmail.com",
 			"to":      "pieter@yellowduck.be",
 			"subject": "hello world",

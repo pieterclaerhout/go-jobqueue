@@ -9,19 +9,14 @@ import (
 	"github.com/pieterclaerhout/go-log"
 )
 
-const statusQueued = "queued"
-const statusRunning = "running"
-const statusError = "error"
-const statusFinished = "finished"
-
-const defaultTableName = "jobs"
-
+// Repository is the interface to which repositories should conform
 type Repository interface {
 	Setup() error
 	AddJob(job *Job) (*Job, error)
 	Process(queue string, interval time.Duration, processor JobProcessor) error
 }
 
+// DefaultRepository returns the default repository based on the env variables
 func DefaultRepository() (Repository, error) {
 
 	dsn := environ.String("DSN", "")

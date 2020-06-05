@@ -7,11 +7,13 @@ import (
 	"github.com/pieterclaerhout/go-log"
 )
 
+// MySQLRepository defines a MySQL-based repository
 type MySQLRepository struct {
 	db        *sqlx.DB
 	tableName string
 }
 
+// NewMySQLRepository returns a new MySQL-based repository
 func NewMySQLRepository(db *sqlx.DB) Repository {
 	return &MySQLRepository{
 		db:        db,
@@ -19,6 +21,7 @@ func NewMySQLRepository(db *sqlx.DB) Repository {
 	}
 }
 
+// Setup is used to perform the setup of the repository
 func (r *MySQLRepository) Setup() error {
 
 	log.Info("Performing setup")
@@ -47,17 +50,16 @@ func (r *MySQLRepository) Setup() error {
 		}
 	}
 
+	log.Info("Performed setup")
+
 	return nil
 
 }
 
+// AddJob adds a job to the queue
 func (r *MySQLRepository) AddJob(job *Job) (*Job, error) {
 
-	job.CreatedOn = time.Now().Unix()
-	job.StartedOn = 0
-	job.FinishedOn = 0
-	job.Error = ""
-	job.State = statusQueued
+	job.markAsQueued()
 
 	result, err := r.db.NamedExec(
 		`INSERT INTO "`+r.tableName+`" (
@@ -71,12 +73,10 @@ func (r *MySQLRepository) AddJob(job *Job) (*Job, error) {
 		return nil, err
 	}
 
-	lastInsertID, err := result.LastInsertId()
+	job.ID, err = result.LastInsertId()
 	if err != nil {
 		return nil, err
 	}
-
-	job.ID = lastInsertID
 
 	log.InfoDump(job, "Queued job:")
 
@@ -84,6 +84,7 @@ func (r *MySQLRepository) AddJob(job *Job) (*Job, error) {
 
 }
 
+// Process starts processing jobs from the given queue with the given interval
 func (r *MySQLRepository) Process(queue string, interval time.Duration, processor JobProcessor) error {
 
 	log.Debug("Processing jobs from queue:", queue, "interval:", interval)

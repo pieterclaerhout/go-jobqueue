@@ -2,7 +2,6 @@ package jobqueue
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -32,10 +31,7 @@ func (r *MySQLRepository) dequeueJob(queue string) (*Job, error) {
 		return nil, err
 	}
 
-	job.StartedOn = time.Now().Unix()
-	job.State = statusRunning
-
-	if err := r.updateJob(trx, job); err != nil {
+	if err := r.updateJob(trx, job.markAsStarted()); err != nil {
 		return job, err
 	}
 
@@ -44,14 +40,7 @@ func (r *MySQLRepository) dequeueJob(queue string) (*Job, error) {
 }
 
 func (r *MySQLRepository) finishJob(job *Job, err error) error {
-	job.State = statusFinished
-	job.Error = ""
-	if err != nil {
-		job.State = statusError
-		job.Error = err.Error()
-	}
-	job.FinishedOn = time.Now().Unix()
-	return r.updateJob(nil, job)
+	return r.updateJob(nil, job.markAsFinished(err))
 }
 
 func (r *MySQLRepository) updateJob(trx *sqlx.Tx, job *Job) error {

@@ -34,7 +34,7 @@ var commandQueueMany = &cli.Command{
 
 		for i := 1; i <= count; i++ {
 
-			j, err := jobqueue.NewJob(queue, jobqueue.JobParams{
+			j, err := jobqueue.NewJob(queue, jobqueue.JobPayload{
 				"from":     "pieter.claerhout@gmail.com",
 				"to":       "pieter@yellowduck.be",
 				"subject":  "hello world",
