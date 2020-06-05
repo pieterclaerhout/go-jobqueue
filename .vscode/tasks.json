@@ -1,0 +1,122 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "go-jobqueue | build",
+            "command": "go-james build -v",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | build darwin/amd64",
+            "command": "go-james build -v --goos=darwin --goarch=amd64",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | build linux/amd64",
+            "command": "go-james build -v --goos=linux --goarch=amd64",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | build windows/amd64",
+            "command": "go-james build -v --goos=windows --goarch=amd64",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | clean",
+            "command": "go-james clean",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | tests",
+            "command": "go-james test",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | run",
+            "command": "go-james run",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | staticcheck",
+            "command": "go-james staticcheck",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | docker-image",
+            "command": "go-james docker-image",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | install",
+            "command": "go-james install",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | uninstall",
+            "command": "go-james uninstall",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | run (debug)",
+            "command": "DEBUG=1 go-james run",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | push to github",
+            "command": "git push --set-upstream origin master",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        }
+    ]
+}
