@@ -16,15 +16,10 @@ const statusFinished = "finished"
 
 const defaultTableName = "jobs"
 
-type Processor func(job *Job) error
-
 type Repository interface {
 	Setup() error
 	AddJob(job *Job) (*Job, error)
-	Process(queue string, interval time.Duration, processor Processor) error
-	// Dequeue(queue string) (*Job, error)
-	// FailJob(job *Job) error
-	// FinishJob(job *Job) error
+	Process(queue string, interval time.Duration, processor JobProcessor) error
 }
 
 func DefaultRepository() (Repository, error) {

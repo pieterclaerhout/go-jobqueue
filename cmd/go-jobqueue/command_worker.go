@@ -1,11 +1,10 @@
 package main
 
 import (
-	"errors"
 	"time"
 
 	"github.com/pieterclaerhout/go-jobqueue"
-	"github.com/pieterclaerhout/go-log"
+	"github.com/pieterclaerhout/go-jobqueue/cmd/go-jobqueue/processors"
 	"github.com/urfave/cli/v2"
 )
 
@@ -36,22 +35,7 @@ var commandWorker = &cli.Command{
 		return r.Process(
 			queue,
 			interval,
-			func(job *jobqueue.Job) error {
-
-				log.Info("Processing job:", job.ID)
-
-				if job.ID%3 == 0 {
-					log.Error("Failing job:", job.ID)
-					return errors.New("job error message")
-				}
-
-				time.Sleep(500 * time.Millisecond)
-
-				log.Info("Processed job:", job.ID)
-
-				return nil
-
-			},
+			processors.NewEmailProcessor(),
 		)
 
 	},

@@ -84,13 +84,13 @@ func (r *MySQLRepository) AddJob(job *Job) (*Job, error) {
 
 }
 
-func (r *MySQLRepository) Process(queue string, interval time.Duration, processor Processor) error {
+func (r *MySQLRepository) Process(queue string, interval time.Duration, processor JobProcessor) error {
 
 	log.Debug("Processing jobs from queue:", queue, "interval:", interval)
 
 	for {
 
-		log.Debug("Checking for jobs:", queue)
+		log.Debug("Checking for jobs in queue:", queue)
 
 		job, err := r.dequeueJob(queue)
 		if err != nil {
@@ -103,7 +103,7 @@ func (r *MySQLRepository) Process(queue string, interval time.Duration, processo
 			continue
 		}
 
-		jobErr := processor(job)
+		jobErr := processor.Process(job)
 
 		if err := r.finishJob(job, jobErr); err != nil {
 			log.Error(err)
