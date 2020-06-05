@@ -93,7 +93,7 @@
         },
         {
             "label": "go-jobqueue | run | worker email",
-            "command": "go-james run worker --jobtype email",
+            "command": "go-james run worker --queue email",
             "type": "shell",
             "group": "build",
             "problemMatcher": [

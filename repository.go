@@ -1,6 +1,8 @@
 package jobqueue
 
 import (
+	"time"
+
 	_ "github.com/go-sql-driver/mysql" // MySQL driver
 	"github.com/jmoiron/sqlx"
 	"github.com/pieterclaerhout/go-jobqueue/environ"
@@ -12,14 +14,17 @@ const statusRunning = "running"
 const statusError = "error"
 const statusFinished = "finished"
 
-const defaultTableName = "jobqueue"
+const defaultTableName = "jobs"
+
+type Processor func(job *Job) error
 
 type Repository interface {
 	Setup() error
-	Queue(job *Job) (*Job, error)
-	Dequeue(jobType string) (*Job, error)
-	FailJob(job *Job) error
-	FinishJob(job *Job) error
+	AddJob(job *Job) (*Job, error)
+	Process(queue string, interval time.Duration, processor Processor) error
+	// Dequeue(queue string) (*Job, error)
+	// FailJob(job *Job) error
+	// FinishJob(job *Job) error
 }
 
 func DefaultRepository() (Repository, error) {

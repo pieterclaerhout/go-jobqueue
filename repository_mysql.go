@@ -1,7 +1,6 @@
 package jobqueue
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -27,14 +26,16 @@ func (r *MySQLRepository) Setup() error {
 	statements := []string{
 		`CREATE TABLE IF NOT EXISTS "` + r.tableName + `" (
 			"id" bigint unsigned NOT NULL AUTO_INCREMENT,
-			"jobtype" varchar(255) NOT NULL DEFAULT '',
+			"queue" varchar(255) NOT NULL DEFAULT '',
 			"state" varchar(255) NOT NULL DEFAULT '',
-			"payload" json DEFAULT NULL,
+			"payload" json,
+			"error" longtext,
 			"created_on" int NOT NULL DEFAULT '0',
 			"started_on" int NOT NULL DEFAULT '0',
 			"finished_on" int NOT NULL DEFAULT '0',
 			PRIMARY KEY ("id"),
 			UNIQUE KEY "id" ("id"),
+			KEY "jobqueue_queue" ("queue"),
 			KEY "jobqueue_state" ("state"),
 			KEY "jobqueue_created_on" ("created_on")
 		)`,
@@ -50,17 +51,19 @@ func (r *MySQLRepository) Setup() error {
 
 }
 
-func (r *MySQLRepository) Queue(job *Job) (*Job, error) {
+func (r *MySQLRepository) AddJob(job *Job) (*Job, error) {
 
-	log.InfoDump(job, "Queueing job:")
-
+	job.CreatedOn = time.Now().Unix()
+	job.StartedOn = 0
+	job.FinishedOn = 0
+	job.Error = ""
 	job.State = statusQueued
 
 	result, err := r.db.NamedExec(
 		`INSERT INTO "`+r.tableName+`" (
-			"jobtype", "state", "payload", "created_on"
+			"queue", "state", "error", "payload", "created_on", "started_on", "finished_on"
 		) VALUES (
-			:jobtype, :state, :payload, :created_on
+			:queue, :state, :error, :payload, :created_on, :started_on, :finished_on
 		)`,
 		job,
 	)
@@ -81,50 +84,42 @@ func (r *MySQLRepository) Queue(job *Job) (*Job, error) {
 
 }
 
-func (r *MySQLRepository) Dequeue(jobType string) (*Job, error) {
+func (r *MySQLRepository) Process(queue string, interval time.Duration, processor Processor) error {
 
-	trx, err := r.db.Beginx()
-	if err != nil {
-		return nil, err
-	}
+	log.Debug("Processing jobs from queue:", queue, "interval:", interval)
 
-	job := &Job{}
+	for {
 
-	if err := trx.Get(
-		job,
-		`SELECT *
-		FROM "`+r.tableName+`"
-		WHERE "state" = ? AND "jobtype" = ?
-		ORDER BY "created_on"
-		LIMIT 1
-		FOR UPDATE SKIP LOCKED`,
-		statusQueued, jobType,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, trx.Commit()
+		log.Debug("Checking for jobs:", queue)
+
+		job, err := r.dequeueJob(queue)
+		if err != nil {
+			log.Error(err)
+			time.Sleep(interval)
 		}
-		return nil, err
+
+		if job == nil {
+			time.Sleep(interval)
+			continue
+		}
+
+		jobErr := processor(job)
+
+		if err := r.finishJob(job, jobErr); err != nil {
+			log.Error(err)
+			time.Sleep(interval)
+		}
+
+		// log.Info("Processing job:", job.ID)
+		// time.Sleep(500 * time.Millisecond)
+		// if err := r.FinishJob(job); err != nil {
+		// 	log.Error("Failed job:", err)
+		// } else {
+		// 	log.Info("Processed job:", job.ID)
+		// }
+
 	}
 
-	job.StartedOn = time.Now().Unix()
-	job.State = statusRunning
+	return nil
 
-	if err := r.setJobStatus(trx, job); err != nil {
-		return job, err
-	}
-
-	return job, nil
-
-}
-
-func (r *MySQLRepository) FailJob(job *Job) error {
-	job.State = statusError
-	job.FinishedOn = time.Now().Unix()
-	return r.setJobStatus(nil, job)
-}
-
-func (r *MySQLRepository) FinishJob(job *Job) error {
-	job.State = statusFinished
-	job.FinishedOn = time.Now().Unix()
-	return r.setJobStatus(nil, job)
 }
