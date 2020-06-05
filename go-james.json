@@ -25,10 +25,7 @@
     },
     "run": {
         "environ": {
-            "DEBUG": "1",
-            "DSN": "twx_buildbot:z79oze0mpurb8zqc@(twx-weu-mysql02-do-user-3374379-0.db.ondigitalocean.com:25060)/twx_queue",
-            "DB_TYPE": "mysql"
-
+            "DEBUG": "1"
         }
     },
     "test": {
