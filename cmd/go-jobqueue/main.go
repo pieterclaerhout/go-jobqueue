@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/pieterclaerhout/go-jobqueue"
 	"github.com/pieterclaerhout/go-jobqueue/environ"
@@ -77,6 +78,13 @@ func main() {
 			{
 				Name:  "queue-many",
 				Usage: "add many jobs to the queue",
+				Flags: []cli.Flag{
+					&cli.IntFlag{
+						Name:  "count",
+						Usage: "The number of jobs to add",
+						Value: 10,
+					},
+				},
 				Action: func(c *cli.Context) error {
 
 					r, err := jobqueue.DefaultRepository()
@@ -84,7 +92,10 @@ func main() {
 						return err
 					}
 
-					for i := 1; i <= 10; i++ {
+					count := c.Int("count")
+					log.Info("Queueing", count, "jobs")
+
+					for i := 1; i <= count; i++ {
 
 						j, err := jobqueue.NewJob("email", jobqueue.JobParams{
 							"from":     "pieter.claerhout@gmail.com",
@@ -106,7 +117,58 @@ func main() {
 
 				},
 			},
-		},
+			{
+				Name:  "worker",
+				Usage: "runs the worker process for a given job type",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "jobtype",
+						Usage: "The jobtype to process",
+					},
+					&cli.DurationFlag{
+						Name:  "interval",
+						Usage: "how often we should check for new jobs",
+						Value: 250 * time.Millisecond,
+					},
+				},
+				Action: func(c *cli.Context) error {
+
+					r, err := jobqueue.DefaultRepository()
+					if err != nil {
+						return err
+					}
+
+					jobType := c.String("jobtype")
+					interval := c.Duration("interval")
+					log.Info("Processing jobs with type:", jobType, "interval:", interval)
+
+					for {
+
+						log.Info("checking")
+
+						job, trx, err := r.Dequeue(jobType)
+						if err != nil {
+							log.Error(err)
+							continue
+						} else if job == nil {
+							time.Sleep(interval)
+							continue
+						}
+
+						log.Info("Processing job:", job.UUID)
+						time.Sleep(500 * time.Millisecond)
+						if err := r.FinishJob(trx, job); err != nil {
+							log.Error("Failed job:", err)
+						} else {
+							log.Info("Processed job:", job.UUID)
+						}
+
+					}
+
+					return nil
+
+				},
+			}},
 	}
 
 	err := app.Run(os.Args)

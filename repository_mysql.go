@@ -1,6 +1,9 @@
 package jobqueue
 
 import (
+	"database/sql"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/pieterclaerhout/go-log"
 )
@@ -19,7 +22,7 @@ func (r *MySQLRepository) Setup() error {
 
 	log.Info("Performing setup")
 
-	if _, err := r.db.Exec(
+	statements := []string{
 		`CREATE TABLE IF NOT EXISTS "jobqueue" (
 			"id" bigint unsigned NOT NULL AUTO_INCREMENT,
 			"uuid" varchar(36) NOT NULL DEFAULT '',
@@ -33,8 +36,13 @@ func (r *MySQLRepository) Setup() error {
 			KEY "jobqueue_state" ("state"),
 			KEY "jobqueue_created_on" ("created_on")
 		)`,
-	); err != nil {
-		return err
+		`ALTER TABLE "jobqueue" ADD COLUMN "finished_on" int NOT NULL DEFAULT '0'`,
+	}
+
+	for _, stmt := range statements {
+		if _, err := r.db.Exec(stmt); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -44,6 +52,8 @@ func (r *MySQLRepository) Setup() error {
 func (r *MySQLRepository) Queue(job *Job) (*Job, error) {
 
 	log.InfoDump(job, "Queueing job:")
+
+	job.State = statusQueued
 
 	result, err := r.db.NamedExec(
 		`INSERT INTO "jobqueue" (
@@ -76,4 +86,50 @@ func (r *MySQLRepository) Queue(job *Job) (*Job, error) {
 
 	return job, nil
 
+}
+
+func (r *MySQLRepository) Dequeue(jobType string) (*Job, *sqlx.Tx, error) {
+
+	trx, err := r.db.Beginx()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	job := &Job{}
+
+	if err := trx.Get(
+		job,
+		`SELECT *
+		FROM "jobqueue"
+		WHERE "state" = ?
+		ORDER BY "created_on"
+		LIMIT 1
+		FOR UPDATE SKIP LOCKED`,
+		statusQueued,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil, trx.Commit()
+		}
+		return nil, nil, err
+	}
+
+	return job, trx, nil
+
+}
+
+func (r *MySQLRepository) StartJob(trx *sqlx.Tx, job *Job) error {
+	job.State = statusRunning
+	return r.setJobStatus(trx, job)
+}
+
+func (r *MySQLRepository) FailJob(trx *sqlx.Tx, job *Job) error {
+	job.State = statusError
+	job.FinishedOn = time.Now().Unix()
+	return r.setJobStatus(trx, job)
+}
+
+func (r *MySQLRepository) FinishJob(trx *sqlx.Tx, job *Job) error {
+	job.State = statusFinished
+	job.FinishedOn = time.Now().Unix()
+	return r.setJobStatus(trx, job)
 }

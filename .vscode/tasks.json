@@ -84,7 +84,16 @@
         },
         {
             "label": "go-jobqueue | run | queue many",
-            "command": "go-james run queue-many",
+            "command": "go-james run queue-many --count 5",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "label": "go-jobqueue | run | worker email",
+            "command": "go-james run worker --jobtype email",
             "type": "shell",
             "group": "build",
             "problemMatcher": [

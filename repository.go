@@ -7,9 +7,16 @@ import (
 	"github.com/pieterclaerhout/go-log"
 )
 
+const statusQueued = "queued"
+const statusRunning = "running"
+const statusError = "error"
+const statusFinished = "finished"
+
 type Repository interface {
 	Setup() error
 	Queue(job *Job) (*Job, error)
+	Dequeue(jobType string) (*Job, *sqlx.Tx, error)
+	FinishJob(trx *sqlx.Tx, job *Job) error
 }
 
 func DefaultRepository() (Repository, error) {

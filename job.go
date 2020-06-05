@@ -8,12 +8,13 @@ import (
 )
 
 type Job struct {
-	ID        int64
-	UUID      string
-	JobType   string
-	State     string
-	Payload   string
-	CreatedOn int64 `db:"created_on"`
+	ID         int64
+	UUID       string
+	JobType    string
+	State      string
+	Payload    string
+	CreatedOn  int64 `db:"created_on"`
+	FinishedOn int64 `db:"finished_on"`
 }
 
 func NewJob(jobType string, payload JobParams) (*Job, error) {
@@ -24,11 +25,11 @@ func NewJob(jobType string, payload JobParams) (*Job, error) {
 	}
 
 	return &Job{
-		UUID:      uuid.New().String(),
-		JobType:   jobType,
-		State:     "queued",
-		Payload:   string(payloadBytes),
-		CreatedOn: time.Now().Unix(),
+		UUID:       uuid.New().String(),
+		JobType:    jobType,
+		Payload:    string(payloadBytes),
+		CreatedOn:  time.Now().Unix(),
+		FinishedOn: 0,
 	}, nil
 
 }
