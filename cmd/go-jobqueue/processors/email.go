@@ -8,12 +8,15 @@ import (
 	"github.com/pieterclaerhout/go-log"
 )
 
+// EmailProcessor defines a sample job processor
 type EmailProcessor struct{}
 
+// NewEmailProcessor returns a new EmailProcessor instance
 func NewEmailProcessor() *EmailProcessor {
 	return &EmailProcessor{}
 }
 
+// Process processes the job
 func (p *EmailProcessor) Process(job *jobqueue.Job) error {
 
 	log.Info("Processing job:", job.ID, job.Payload)
