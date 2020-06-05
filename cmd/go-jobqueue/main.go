@@ -79,6 +79,11 @@ func main() {
 				Name:  "queue-many",
 				Usage: "add many jobs to the queue",
 				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "jobtype",
+						Usage: "The jobtype to process",
+						Value: "email",
+					},
 					&cli.IntFlag{
 						Name:  "count",
 						Usage: "The number of jobs to add",
@@ -93,11 +98,12 @@ func main() {
 					}
 
 					count := c.Int("count")
-					log.Info("Queueing", count, "jobs")
+					jobType := c.String("jobtype")
+					log.Info("Queueing", count, "jobs of type:", jobType)
 
 					for i := 1; i <= count; i++ {
 
-						j, err := jobqueue.NewJob("email", jobqueue.JobParams{
+						j, err := jobqueue.NewJob(jobType, jobqueue.JobParams{
 							"from":     "pieter.claerhout@gmail.com",
 							"to":       "pieter@yellowduck.be",
 							"subject":  "hello world",
@@ -144,20 +150,21 @@ func main() {
 
 					for {
 
-						log.Info("checking")
+						log.Debug("Checking for jobs:", jobType)
 
-						job, trx, err := r.Dequeue(jobType)
+						job, err := r.Dequeue(jobType)
 						if err != nil {
 							log.Error(err)
-							continue
-						} else if job == nil {
+						}
+
+						if job == nil {
 							time.Sleep(interval)
 							continue
 						}
 
 						log.Info("Processing job:", job.UUID)
 						time.Sleep(500 * time.Millisecond)
-						if err := r.FinishJob(trx, job); err != nil {
+						if err := r.FinishJob(job); err != nil {
 							log.Error("Failed job:", err)
 						} else {
 							log.Info("Processed job:", job.UUID)

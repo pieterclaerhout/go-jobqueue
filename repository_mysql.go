@@ -88,11 +88,11 @@ func (r *MySQLRepository) Queue(job *Job) (*Job, error) {
 
 }
 
-func (r *MySQLRepository) Dequeue(jobType string) (*Job, *sqlx.Tx, error) {
+func (r *MySQLRepository) Dequeue(jobType string) (*Job, error) {
 
 	trx, err := r.db.Beginx()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	job := &Job{}
@@ -101,35 +101,36 @@ func (r *MySQLRepository) Dequeue(jobType string) (*Job, *sqlx.Tx, error) {
 		job,
 		`SELECT *
 		FROM "jobqueue"
-		WHERE "state" = ?
+		WHERE "state" = ? AND "jobtype" = ?
 		ORDER BY "created_on"
 		LIMIT 1
 		FOR UPDATE SKIP LOCKED`,
-		statusQueued,
+		statusQueued, jobType,
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil, trx.Commit()
+			return nil, trx.Commit()
 		}
-		return nil, nil, err
+		return nil, err
 	}
 
-	return job, trx, nil
-
-}
-
-func (r *MySQLRepository) StartJob(trx *sqlx.Tx, job *Job) error {
 	job.State = statusRunning
-	return r.setJobStatus(trx, job)
+
+	if err := r.setJobStatus(trx, job); err != nil {
+		return job, err
+	}
+
+	return job, nil
+
 }
 
-func (r *MySQLRepository) FailJob(trx *sqlx.Tx, job *Job) error {
+func (r *MySQLRepository) FailJob(job *Job) error {
 	job.State = statusError
 	job.FinishedOn = time.Now().Unix()
-	return r.setJobStatus(trx, job)
+	return r.setJobStatus(nil, job)
 }
 
-func (r *MySQLRepository) FinishJob(trx *sqlx.Tx, job *Job) error {
+func (r *MySQLRepository) FinishJob(job *Job) error {
 	job.State = statusFinished
 	job.FinishedOn = time.Now().Unix()
-	return r.setJobStatus(trx, job)
+	return r.setJobStatus(nil, job)
 }

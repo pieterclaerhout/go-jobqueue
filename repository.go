@@ -15,8 +15,9 @@ const statusFinished = "finished"
 type Repository interface {
 	Setup() error
 	Queue(job *Job) (*Job, error)
-	Dequeue(jobType string) (*Job, *sqlx.Tx, error)
-	FinishJob(trx *sqlx.Tx, job *Job) error
+	Dequeue(jobType string) (*Job, error)
+	FailJob(job *Job) error
+	FinishJob(job *Job) error
 }
 
 func DefaultRepository() (Repository, error) {
