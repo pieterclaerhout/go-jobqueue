@@ -5,7 +5,7 @@
         "**/.hg": true,
         "**/.svn": true,
         "**/CVS": true,
-        "**/build": true
+        // "**/build": true
     },
     "files.watcherExclude": {
         "**/build**": true

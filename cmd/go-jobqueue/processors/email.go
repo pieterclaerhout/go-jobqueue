@@ -1,11 +1,11 @@
 package processors
 
 import (
-	"errors"
 	"time"
 
 	"github.com/pieterclaerhout/go-jobqueue"
 	"github.com/pieterclaerhout/go-log"
+	"github.com/pkg/errors"
 )
 
 // EmailProcessor defines a sample job processor

@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pieterclaerhout/go-jobqueue/environ"
 	"github.com/pieterclaerhout/go-log"
+	"github.com/pkg/errors"
 )
 
 // Repository is the interface to which repositories should conform
@@ -21,6 +22,10 @@ func DefaultRepository() (Repository, error) {
 
 	dsn := environ.String("DSN", "")
 	dbType := environ.String("DB_TYPE", "mysql")
+
+	if dsn == "" {
+		return nil, errors.New("DSN env var is not set")
+	}
 
 	db, err := sqlx.Open(dbType, dsn)
 	if err != nil {
