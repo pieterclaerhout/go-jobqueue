@@ -23,6 +23,12 @@ func (p *EmailProcessor) Process(job *jobqueue.Job) error {
 		return errors.New("job error message")
 	}
 
+	from := job.StringArg("from")
+	sequence := job.IntArg("sequence")
+	unknown := job.StringArg("unknown")
+
+	log.Info(from, sequence, unknown)
+
 	time.Sleep(500 * time.Millisecond)
 
 	log.Info("Processed job:", job.ID, job.Payload)

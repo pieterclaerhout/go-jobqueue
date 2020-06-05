@@ -3,6 +3,8 @@ package jobqueue
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/tidwall/gjson"
 )
 
 type Job struct {
@@ -29,4 +31,12 @@ func NewJob(queue string, payload JobParams) (*Job, error) {
 		CreatedOn: time.Now().Unix(),
 	}, nil
 
+}
+
+func (job *Job) StringArg(name string) string {
+	return gjson.Get(job.Payload, name).String()
+}
+
+func (job *Job) IntArg(name string) int64 {
+	return gjson.Get(job.Payload, name).Int()
 }
