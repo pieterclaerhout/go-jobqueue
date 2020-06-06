@@ -37,6 +37,6 @@ func DefaultRepository() (Repository, error) {
 
 	log.Info("Connected to:", dsn)
 
-	return NewMySQLRepository(db), nil
+	return NewMySQLRepository(db, defaultTableName), nil
 
 }

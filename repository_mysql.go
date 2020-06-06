@@ -14,10 +14,10 @@ type MySQLRepository struct {
 }
 
 // NewMySQLRepository returns a new MySQL-based repository
-func NewMySQLRepository(db *sqlx.DB) Repository {
+func NewMySQLRepository(db *sqlx.DB, tableName string) Repository {
 	return &MySQLRepository{
 		db:        db,
-		tableName: defaultTableName,
+		tableName: tableName,
 	}
 }
 
