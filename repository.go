@@ -13,7 +13,7 @@ import (
 
 // JobRepository is the interface to which repositories should conform
 type JobRepository interface {
-	Setup() error
+	Setup()
 	AddJob(job *Job) (*Job, error)
 	Process(queue string, interval time.Duration, processor JobProcessor)
 }

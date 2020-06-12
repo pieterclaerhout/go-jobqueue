@@ -65,15 +65,6 @@
             ]
         },
         {
-            "label": "go-jobqueue | run | setup",
-            "command": "go-james run setup",
-            "type": "shell",
-            "group": "build",
-            "problemMatcher": [
-                "$go"
-            ]
-        },
-        {
             "label": "go-jobqueue | run | queue",
             "command": "go-james run queue",
             "type": "shell",

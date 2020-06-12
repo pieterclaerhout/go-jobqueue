@@ -24,7 +24,6 @@ func main() {
 	app := &cli.App{
 		Commands: []*cli.Command{
 			commandVersion,
-			commandSetup,
 			commandQueue,
 			commandQueueMany,
 			commandWorker,

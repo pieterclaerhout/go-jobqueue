@@ -1,6 +1,7 @@
 package jobqueue
 
 import (
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -15,29 +16,32 @@ type DBRepository struct {
 
 // NewMySQLRepository returns a new MySQL-based repository
 func NewMySQLRepository(db *sqlx.DB, tableName string) JobRepository {
-	return &DBRepository{
+	r := &DBRepository{
 		db:        db,
 		tableName: tableName,
 	}
+	r.Setup()
+	return r
 }
 
 // Setup is used to perform the setup of the repository
-func (r *DBRepository) Setup() error {
+func (r *DBRepository) Setup() {
 
 	log.Info("Performing setup")
 
 	statements := r.setupForDBType(r.db.DriverName())
-	log.DebugDump(statements, "executing:")
 
 	for _, stmt := range statements {
+		log.Debug("executing:", stmt)
 		if _, err := r.db.Exec(stmt); err != nil {
+			if strings.HasPrefix(err.Error(), "Error 1061:") {
+				continue
+			}
 			log.Error(err)
 		}
 	}
 
 	log.Info("Performed setup")
-
-	return nil
 
 }
 

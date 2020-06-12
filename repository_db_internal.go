@@ -72,9 +72,9 @@ func (r *DBRepository) setupForDBType(dbType string) []string {
 				"state" varchar(255) NOT NULL DEFAULT '',
 				"payload" json,
 				"error" longtext,
-				"created_on" int NOT NULL DEFAULT '0',
-				"started_on" int NOT NULL DEFAULT '0',
-				"finished_on" int NOT NULL DEFAULT '0',
+				"created_on" int NOT NULL DEFAULT 0,
+				"started_on" int NOT NULL DEFAULT 0,
+				"finished_on" int NOT NULL DEFAULT 0,
 				PRIMARY KEY ("id")
 			)`,
 			`CREATE INDEX "` + r.tableName + `_queue" ON "` + r.tableName + `" ("queue")`,
