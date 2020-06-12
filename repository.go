@@ -15,7 +15,7 @@ import (
 type JobRepository interface {
 	Setup()
 	AddJob(job *Job) (*Job, error)
-	Process(queue string, interval time.Duration, processor JobProcessor)
+	Process(queue string, interval time.Duration, processors map[string]JobProcessor)
 }
 
 // DefaultRepository returns the default repository based on the env variables

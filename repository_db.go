@@ -96,15 +96,20 @@ func (r *DBRepository) AddJob(job *Job) (*Job, error) {
 }
 
 // Process starts processing jobs from the given queue with the given interval
-func (r *DBRepository) Process(queue string, interval time.Duration, processor JobProcessor) {
+func (r *DBRepository) Process(queue string, interval time.Duration, processors map[string]JobProcessor) {
 
-	log.Debug("Processing jobs from queue:", queue, "interval:", interval)
+	queues := []string{}
+	for queue := range processors {
+		queues = append(queues, queue)
+	}
+
+	log.Debug("Processing jobs from queue(s):", strings.Join(queues, "|"), "interval:", interval)
 
 	for {
 
-		log.Debug("Checking for jobs in queue:", queue)
+		log.Debug("Checking for jobs in queue(s):", strings.Join(queues, "|"))
 
-		job, err := r.dequeueJob(queue)
+		job, err := r.dequeueJob(queues)
 		if err != nil {
 			log.Error(err)
 			time.Sleep(interval)
@@ -114,6 +119,8 @@ func (r *DBRepository) Process(queue string, interval time.Duration, processor J
 			time.Sleep(interval)
 			continue
 		}
+
+		processor := processors[job.Queue]
 
 		jobErr := processor.Process(job)
 

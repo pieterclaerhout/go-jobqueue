@@ -35,7 +35,10 @@ var commandWorker = &cli.Command{
 		r.Process(
 			queue,
 			interval,
-			processors.NewEmailProcessor(),
+			map[string]jobqueue.JobProcessor{
+				"email2": processors.NewEmailProcessor(),
+				"email":  processors.NewEmailProcessor(),
+			},
 		)
 
 		return nil

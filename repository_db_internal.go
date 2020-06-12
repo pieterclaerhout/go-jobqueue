@@ -6,7 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func (r *DBRepository) dequeueJob(queue string) (*Job, error) {
+func (r *DBRepository) dequeueJob(queues []string) (*Job, error) {
 
 	trx, err := r.db.Beginx()
 	if err != nil {
@@ -15,15 +15,19 @@ func (r *DBRepository) dequeueJob(queue string) (*Job, error) {
 
 	job := &Job{}
 
-	if err := trx.Get(
-		job,
-		r.db.Rebind(`SELECT * FROM "`+r.tableName+`"
-		WHERE "state" = ? AND "queue" = ?
+	query, args, err := sqlx.In(
+		`SELECT * FROM "`+r.tableName+`"
+		WHERE "state" = ? AND "queue" IN (?)
 		ORDER BY "created_on"
 		LIMIT 1
-		FOR UPDATE SKIP LOCKED`),
-		statusQueued, queue,
-	); err != nil {
+		FOR UPDATE SKIP LOCKED`,
+		statusQueued, queues,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := trx.Get(job, r.db.Rebind(query), args...); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, trx.Commit()
 		}
