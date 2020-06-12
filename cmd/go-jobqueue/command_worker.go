@@ -32,11 +32,13 @@ var commandWorker = &cli.Command{
 		queue := c.String("queue")
 		interval := c.Duration("interval")
 
-		return r.Process(
+		r.Process(
 			queue,
 			interval,
 			processors.NewEmailProcessor(),
 		)
+
+		return nil
 
 	},
 }

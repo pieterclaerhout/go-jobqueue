@@ -7,42 +7,27 @@ import (
 	"github.com/pieterclaerhout/go-log"
 )
 
-// MySQLRepository defines a MySQL-based repository
-type MySQLRepository struct {
+// DBRepository defines a MySQL-based repository
+type DBRepository struct {
 	db        *sqlx.DB
 	tableName string
 }
 
 // NewMySQLRepository returns a new MySQL-based repository
-func NewMySQLRepository(db *sqlx.DB, tableName string) Repository {
-	return &MySQLRepository{
+func NewMySQLRepository(db *sqlx.DB, tableName string) JobRepository {
+	return &DBRepository{
 		db:        db,
 		tableName: tableName,
 	}
 }
 
 // Setup is used to perform the setup of the repository
-func (r *MySQLRepository) Setup() error {
+func (r *DBRepository) Setup() error {
 
 	log.Info("Performing setup")
 
-	statements := []string{
-		`CREATE TABLE IF NOT EXISTS "` + r.tableName + `" (
-			"id" bigint unsigned NOT NULL AUTO_INCREMENT,
-			"queue" varchar(255) NOT NULL DEFAULT '',
-			"state" varchar(255) NOT NULL DEFAULT '',
-			"payload" json,
-			"error" longtext,
-			"created_on" int NOT NULL DEFAULT '0',
-			"started_on" int NOT NULL DEFAULT '0',
-			"finished_on" int NOT NULL DEFAULT '0',
-			PRIMARY KEY ("id"),
-			UNIQUE KEY "id" ("id"),
-			KEY "jobqueue_queue" ("queue"),
-			KEY "jobqueue_state" ("state"),
-			KEY "jobqueue_created_on" ("created_on")
-		)`,
-	}
+	statements := r.setupForDBType(r.db.DriverName())
+	log.DebugDump(statements, "executing:")
 
 	for _, stmt := range statements {
 		if _, err := r.db.Exec(stmt); err != nil {
@@ -57,25 +42,47 @@ func (r *MySQLRepository) Setup() error {
 }
 
 // AddJob adds a job to the queue
-func (r *MySQLRepository) AddJob(job *Job) (*Job, error) {
+func (r *DBRepository) AddJob(job *Job) (*Job, error) {
 
 	job.markAsQueued()
 
-	result, err := r.db.NamedExec(
-		`INSERT INTO "`+r.tableName+`" (
+	if r.db.DriverName() == "postgres" {
+
+		stmt, err := r.db.PrepareNamed(
+			`INSERT INTO "` + r.tableName + `" (
 			"queue", "state", "error", "payload", "created_on", "started_on", "finished_on"
 		) VALUES (
 			:queue, :state, :error, :payload, :created_on, :started_on, :finished_on
-		)`,
-		job,
-	)
-	if err != nil {
-		return nil, err
+		) RETURNING "id"`,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := stmt.Get(&job.ID, job); err != nil {
+			return nil, err
+		}
+
 	}
 
-	job.ID, err = result.LastInsertId()
-	if err != nil {
-		return nil, err
+	if r.db.DriverName() == "mysql" {
+
+		result, err := r.db.NamedExec(
+			`INSERT INTO "`+r.tableName+`" (
+				"queue", "state", "error", "payload", "created_on", "started_on", "finished_on"
+			) VALUES (
+				:queue, :state, :error, :payload, :created_on, :started_on, :finished_on
+			)`,
+			job,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if job.ID, err = result.LastInsertId(); err != nil {
+			return nil, err
+		}
+
 	}
 
 	log.InfoDump(job, "Queued job:")
@@ -85,7 +92,7 @@ func (r *MySQLRepository) AddJob(job *Job) (*Job, error) {
 }
 
 // Process starts processing jobs from the given queue with the given interval
-func (r *MySQLRepository) Process(queue string, interval time.Duration, processor JobProcessor) error {
+func (r *DBRepository) Process(queue string, interval time.Duration, processor JobProcessor) {
 
 	log.Debug("Processing jobs from queue:", queue, "interval:", interval)
 
@@ -112,7 +119,5 @@ func (r *MySQLRepository) Process(queue string, interval time.Duration, processo
 		}
 
 	}
-
-	return nil
 
 }

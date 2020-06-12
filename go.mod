@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/joho/godotenv v1.3.0
+	github.com/lib/pq v1.0.0
 	github.com/pieterclaerhout/go-log v1.14.0
 	github.com/pkg/errors v0.9.1
 	github.com/tidwall/gjson v1.3.2
